@@ -3,37 +3,31 @@ const express = require('express');
 const cors = require('cors');
 const Anthropic = require('@anthropic-ai/sdk');
 const mongoose = require('mongoose');
-const path = require('path'); 
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// 1. Conexão com o Banco de Dados (MongoDB)
+// 1. Conexão com MongoDB
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ Conectado ao MongoDB'))
-    .catch(err => console.error('❌ Erro no MongoDB:', err));
+  .then(() => console.log("✅ MongoDB Conectado"))
+  .catch(err => console.error("❌ Erro MongoDB:", err));
 
-// 2. Modelo do Banco de Dados
 const RoteiroSchema = new mongoose.Schema({
-    dataCriacao: { type: Date, default: Date.now },
-    mercado: String,
-    tema: String,
-    gancho: String,
-    conteudo: String
+  mercado: String,
+  tema: String,
+  conteudo: String,
+  dataCriacao: { type: Date, default: Date.now }
 });
 const Roteiro = mongoose.model('Roteiro', RoteiroSchema);
 
-// Inicializa Anthropic
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// 2. Configuração da Anthropic com o modelo do seu painel
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
-// COLOQUE O SEU SYSTEM_PROMPT COMPLETO AQUI
 const SYSTEM_PROMPT = `
 Identidade O que você é
 Você é um gerador inteligente de roteiros para redes sociais da Coco and Luna. Funciona como um
@@ -374,51 +368,50 @@ Quando aprovado, monte o briefing completo. Responda DIRETAMENTE com o Roteiro e
 | 2 | ... | ... | ... | ... | ... | ... |
 | ... | ... | ... | ... | ... | ... | ... |
 `;
-
-
-// 3. Rota de Geração (Salva no BD após gerar)
 app.post('/api/gerar', async (req, res) => {
+  try {
     const { mercado, narrador, formato, tema, gancho, notas } = req.body;
 
-    try {
-        const message = await anthropic.messages.create({
-            model: "claude-3-5-sonnet-20240620",
-            max_tokens: 4096,
-            system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-            messages: [{ 
-                role: "user", 
-                content: `GERAR ROTEIRO. Mercado: ${mercado}. Quem aparece: ${narrador}. Formato: ${formato}. Tema: ${tema}. Gancho: ${gancho}. Notas: ${notas}` 
-            }],
-        });
+    const response = await anthropic.messages.create({
+      model: "claude-opus-4-7", // Atualizado conforme seu Workbench
+      max_tokens: 2500, // Garante que a tabela de briefing não venha cortada
+      system: SYSTEM_PROMPT,
+      messages: [
+        { 
+          role: "user", 
+          content: `GERAR ROTEIRO. Mercado: ${mercado}. Quem aparece: ${narrador}. Formato: ${formato}. Tema: ${tema}. Gancho: ${gancho}. Notas: ${notas}` 
+        }
+      ],
+    });
 
-        const roteiroGerado = message.content[0].text;
+    const textoRoteiro = response.content[0].text;
 
-        // Salva o roteiro no banco de dados
-        const novoRoteiro = new Roteiro({
-            mercado,
-            tema,
-            gancho,
-            conteudo: roteiroGerado
-        });
-        await novoRoteiro.save();
+    const novoRoteiro = new Roteiro({
+      mercado,
+      tema,
+      conteudo: textoRoteiro
+    });
+    await novoRoteiro.save();
 
-        res.json({ roteiro: roteiroGerado, id: novoRoteiro._id });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erro na API do Claude' });
-    }
+    res.json({ roteiro: textoRoteiro });
+  } catch (error) {
+    console.error("❌ Erro na IA:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// 4. Nova Rota: Buscar Histórico
 app.get('/api/historico', async (req, res) => {
-    try {
-        // Busca os 50 roteiros mais recentes
-        const historico = await Roteiro.find().sort({ dataCriacao: -1 }).limit(50);
-        res.json(historico);
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar histórico' });
-    }
+  try {
+    const historico = await Roteiro.find().sort({ dataCriacao: -1 }).limit(10);
+    res.json(historico);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Sistema Online na porta ${PORT}`));
