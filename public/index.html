@@ -13,86 +13,22 @@
             --sidebar-bg: #111827;
             --sidebar-hover: #1f2937;
         }
-        
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f3f4f6; 
-            height: 100vh; 
-            overflow: hidden; 
-        }
-        
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; height: 100vh; overflow: hidden; }
         .app-container { display: flex; height: 100vh; }
-        
-        /* Menu Lateral Estilizado */
-        .sidebar { 
-            width: 320px; 
-            background-color: var(--sidebar-bg); 
-            color: #f9fafb; 
-            display: flex; 
-            flex-direction: column; 
-            overflow-y: auto; 
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            z-index: 10;
-        }
-        .sidebar-header { 
-            padding: 24px 20px; 
-            border-bottom: 1px solid #374151; 
-        }
-        .historico-item { 
-            padding: 16px 20px; 
-            border-bottom: 1px solid #374151; 
-            cursor: pointer; 
-            transition: all 0.2s ease; 
-        }
-        .historico-item:hover { background-color: var(--sidebar-hover); padding-left: 24px; border-left: 4px solid var(--brand-blue); }
+        .sidebar { width: 320px; background-color: var(--sidebar-bg); color: #f9fafb; display: flex; flex-direction: column; overflow-y: auto; z-index: 10; }
+        .sidebar-header { padding: 24px 20px; border-bottom: 1px solid #374151; }
+        .historico-item { padding: 16px 20px; border-bottom: 1px solid #374151; cursor: pointer; transition: all 0.2s ease; }
+        .historico-item:hover { background-color: var(--sidebar-hover); border-left: 4px solid var(--brand-blue); }
         .historico-data { font-size: 0.75rem; color: #9ca3af; margin-top: 4px; }
         .historico-titulo { font-size: 0.9rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
-        /* Área Principal */
         .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
         .max-w-custom { max-width: 900px; margin: 0 auto; }
-        
-        /* Cards e Formulários Modernos */
-        .card { 
-            border: none; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
-        }
-        .form-label { font-weight: 600; color: #374151; font-size: 0.9rem; margin-bottom: 8px;}
-        .form-select, .form-control { 
-            border-radius: 8px; 
-            padding: 12px;
-            border-color: #d1d5db;
-        }
-        .form-select:focus, .form-control:focus {
-            border-color: var(--brand-blue);
-            box-shadow: 0 0 0 0.25rem rgba(43, 95, 237, 0.25);
-        }
-        
-        /* Botões Azuis da Marca */
-        .btn-primary { 
-            background-color: var(--brand-blue); 
-            border: none; 
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-        .btn-primary:hover { 
-            background-color: var(--brand-blue-hover); 
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(43, 95, 237, 0.3);
-        }
-        
-        #resultado { 
-            background: #fff; 
-            border-left: 4px solid var(--brand-blue); 
-            white-space: pre-wrap; 
-            font-size: 0.95rem; 
-            line-height: 1.6;
-        }
-        .text-brand { color: var(--brand-blue) !important; }
-        .border-brand { border-color: var(--brand-blue) !important; }
-        .btn-outline-brand { color: var(--brand-blue); border-color: var(--brand-blue); }
-        .btn-outline-brand:hover { background-color: var(--brand-blue); color: white; }
+        .card { border: none; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .form-label { font-weight: 600; color: #374151; font-size: 0.9rem; }
+        .btn-primary { background-color: var(--brand-blue); border: none; border-radius: 8px; }
+        .btn-primary:hover { background-color: var(--brand-blue-hover); }
+        .btn-random { background-color: #6366f1; color: white; border: none; border-radius: 8px; }
+        #resultado { background: #fff; border-left: 4px solid var(--brand-blue); white-space: pre-wrap; font-size: 0.95rem; }
     </style>
 </head>
 <body>
@@ -100,28 +36,25 @@
         <div class="sidebar">
             <div class="sidebar-header d-flex justify-content-between align-items-center">
                 <h5 class="m-0 fs-6 fw-bold">Coco & Luna Labs</h5>
-                <button onclick="novaSessao()" class="btn btn-sm btn-outline-light" style="border-radius: 6px;">+ Novo</button>
+                <button onclick="novaSessao()" class="btn btn-sm btn-outline-light"> + Novo</button>
             </div>
-            <div id="listaHistorico" class="flex-grow-1">
-                <div class="p-4 text-center text-muted small">Carregando histórico...</div>
-            </div>
+            <div id="listaHistorico" class="flex-grow-1"></div>
         </div>
 
         <div class="main-content">
             <div class="container-fluid max-w-custom">
                 <div class="card p-5 mb-4" id="painelCriacao">
-                    <div class="text-center mb-5">
-                        <h2 class="h3 fw-bold text-dark mb-2">Gerador de Roteiros Inteligente</h2>
-                        <p class="text-muted">Monte a combinação estratégica para o seu próximo conteúdo.</p>
+                    <div class="text-center mb-4">
+                        <h2 class="h3 fw-bold text-dark">Gerador de Roteiros Inteligente</h2>
                     </div>
                     
-                    <form id="formRoteiro" onsubmit="event.preventDefault(); gerarRoteiro();">
+                    <form id="formRoteiro" onsubmit="event.preventDefault(); revisarPedido();">
                         <div class="row g-4">
                             <div class="col-md-4">
                                 <label class="form-label">Mercado</label>
                                 <select id="mercado" class="form-select bg-light">
-                                    <option value="Brasil">Brasil 🇧🇷</option>
-                                    <option value="EUA">EUA 🇺🇸</option>
+                                    <option value="Brasil">Brasil BR</option>
+                                    <option value="EUA">EUA US</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
@@ -130,7 +63,7 @@
                                     <option value="Veterinária da marca">Veterinária da marca</option>
                                     <option value="Colaborador(a) da empresa">Colaborador(a) da empresa</option>
                                     <option value="Pet do colaborador">Pet do colaborador</option>
-                                    <option value="UGC parceiro (tutor externo)">UGC parceiro (tutor externo)</option>
+                                    <option value="UGC parceiro">UGC parceiro</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
@@ -146,187 +79,60 @@
                                     <option value="Diálogo: Conflito">Diálogo: Conflito</option>
                                 </select>
                             </div>
-
                             <div class="col-12">
                                 <label class="form-label">Tema Principal</label>
                                 <select id="tema" class="form-select" required>
-                                    <option value="" disabled selected>Selecione um tema mapeado...</option>
-                                    <optgroup label="Humor / Identificação">
-                                        <option value="1. Casa em Caos (Gases do Pet)">1. Casa em Caos (Gases do Pet)</option>
-                                        <option value="2. Drama Felino (Gato Gritando)">2. Drama Felino (Gato Gritando)</option>
-                                        <option value="3. Confissões do Pet">3. Confissões do Pet</option>
-                                    </optgroup>
-                                    <optgroup label="Rotina / Lifestyle">
-                                        <option value="4. Rotina com Pet Doente">4. Rotina com Pet Doente</option>
-                                        <option value="5. Momento do Suplemento">5. Momento do Suplemento</option>
-                                        <option value="6. Pós-Banho & Carinho">6. Pós-Banho & Carinho</option>
-                                        <option value="7. Dia de Spa do Pet">7. Dia de Spa do Pet</option>
-                                    </optgroup>
-                                    <optgroup label="Educativo">
-                                        <option value="8. Alergias em Cães">8. Alergias em Cães</option>
-                                        <option value="9. Saúde Renal em Gatos">9. Saúde Renal em Gatos</option>
-                                        <option value="10. Como Escolher Suplementos">10. Como Escolher Suplementos</option>
-                                        <option value="11. Cheiro das Patas Explicado">11. Cheiro das Patas Explicado</option>
-                                        <option value="12. Cuidados Diários Essenciais">12. Cuidados Diários Essenciais</option>
-                                    </optgroup>
-                                    <optgroup label="Saúde / Transformação">
-                                        <option value="13. Antes e Depois (Resultados Visuais)">13. Antes e Depois (Resultados Visuais)</option>
-                                        <option value="14. Mobilidade e Articulação">14. Mobilidade e Articulação</option>
-                                        <option value="15. Pet Pós-Exercício">15. Pet Pós-Exercício</option>
-                                    </optgroup>
-                                    <optgroup label="Alimentação">
-                                        <option value="16. Alimentação Natural / Caseira">16. Alimentação Natural / Caseira</option>
-                                        <option value="17. Montagem de Refeições">17. Montagem de Refeições</option>
-                                        <option value="18. Petiscos Saudáveis Caseiros">18. Petiscos Saudáveis Caseiros</option>
-                                    </optgroup>
-                                    <optgroup label="Produto (Não Vendedor)">
-                                        <option value="19. Reação ao Suplemento">19. Reação ao Suplemento</option>
-                                        <option value="20. Facilidade de Uso">20. Facilidade de Uso</option>
-                                        <option value="21. Comparação de Produtos">21. Comparação de Produtos</option>
-                                        <option value="22. Unboxing / Experiência">22. Unboxing / Experiência</option>
-                                    </optgroup>
-                                    <optgroup label="Conexão Emocional">
-                                        <option value="23. Longevidade do Pet">23. Longevidade do Pet</option>
-                                        <option value="24. História de Transformação">24. História de Transformação</option>
-                                    </optgroup>
-                                    <optgroup label="Criativos / Diferenciados">
-                                        <option value="25. Pet em Situações Humanas">25. Pet em Situações Humanas</option>
-                                        <option value="26. Fantasia / Personagem">26. Fantasia / Personagem</option>
-                                        <option value="27. Conteúdos Temáticos">27. Conteúdos Temáticos</option>
-                                    </optgroup>
-                                    <optgroup label="Comportamento">
-                                        <option value="28. Obsessão por Objetos">28. Obsessão por Objetos</option>
-                                        <option value="29. Recompensa por Comportamento">29. Recompensa por Comportamento</option>
-                                    </optgroup>
-                                    <optgroup label="Outros">
-                                        <option value="30. Cuidados com Filhotes">30. Cuidados com Filhotes</option>
-                                        <option value="31. Conversa Natural sobre Produto">31. Conversa Natural sobre Produto</option>
-                                        <option value="32. Múltiplos Pets em Casa">32. Múltiplos Pets em Casa</option>
-                                        <option value="33. Saúde Bucal (Adaptado)">33. Saúde Bucal (Adaptado)</option>
-                                        <option value="34. Produto como Apoio (Não Protagonista)">34. Produto como Apoio (Não Protagonista)</option>
-                                    </optgroup>
+                                    <option value="" disabled selected>Selecione um tema...</option>
+                                    <option value="1. Casa em Caos (Gases do Pet)">1. Casa em Caos (Gases do Pet)</option>
+                                    <option value="3. Confissões do Pet">3. Confissões do Pet</option>
+                                    <option value="9. Saúde Renal em Gatos">9. Saúde Renal em Gatos</option>
+                                    <option value="13. Antes e Depois">13. Antes e Depois</option>
+                                    <option value="23. Longevidade do Pet">23. Longevidade do Pet</option>
                                 </select>
                             </div>
-
                             <div class="col-12">
                                 <label class="form-label">Gancho de Abertura</label>
                                 <select id="gancho" class="form-select" required>
-                                    <option value="" disabled selected>Selecione um gancho validado...</option>
-                                    <optgroup label="Segredos & Truques">
-                                        <option value="1. Os truques proibidos que todo tutor de cachorro deveria saber...">1. Os truques proibidos que todo tutor de cachorro deveria saber...</option>
-                                        <option value="2. Existe um lado obscuro da ração que a maioria dos tutores não sabe.">2. Existe um lado obscuro da ração que a maioria dos tutores não sabe.</option>
-                                        <option value="3. Olha o que veterinários cobram pra te ensinar isso...">3. Olha o que veterinários cobram pra te ensinar isso...</option>
-                                        <option value="4. O que só os tutores mais informados sabem mas guardam a sete chaves.">4. O que só os tutores mais informados sabem mas guardam a sete chaves.</option>
-                                        <option value="5. O que nenhum veterinário teve coragem de te contar sobre a saúde do seu gato.">5. O que nenhum veterinário teve coragem de te contar sobre a saúde do seu gato.</option>
-                                        <option value="6. Se você ainda acha que ração seca sozinha é suficiente pra saúde do seu gato...">6. Se você ainda acha que ração seca sozinha é suficiente pra saúde do seu gato...</option>
-                                    </optgroup>
-                                    <optgroup label="Momentos Reais de Tutor">
-                                        <option value="7. Você consegue saber se seu cachorro te ama de verdade ou só ama o seu lanche?">7. Você consegue saber se seu cachorro te ama de verdade ou só ama o seu lanche?</option>
-                                        <option value="8. Conselhos que parecem certos mas prejudicam a saúde do seu cachorro.">8. Conselhos que parecem certos mas prejudicam a saúde do seu cachorro.</option>
-                                        <option value="9. Vida de cachorro bem cuidado vs vida de cachorro negligenciado. Qual a vida do seu?">9. Vida de cachorro bem cuidado vs vida de cachorro negligenciado. Qual a vida do seu?</option>
-                                        <option value="10. Provando que você não é um tutor descuidado - só está desinformado.">10. Provando que você não é um tutor descuidado - só está desinformado.</option>
-                                        <option value="11. Coisas que só existem na internet edição tutor de pet.">11. Coisas que só existem na internet edição tutor de pet.</option>
-                                        <option value="12. Informações do mundo pet que você precisa saber pra cuidar melhor do seu bichinho.">12. Informações do mundo pet que você precisa saber pra cuidar melhor do seu bichinho.</option>
-                                        <option value="13. Com quantos anos você descobriu que tava dando água pro seu cachorro errado?">13. Com quantos anos você descobriu que tava dando água pro seu cachorro errado?</option>
-                                    </optgroup>
-                                    <optgroup label="Emoção & Storytelling">
-                                        <option value="14. A gente levou anos pra aprender isso sobre pets. Vamos te ensinar em menos de 1 minuto.">14. A gente levou anos pra aprender isso sobre pets. Vamos te ensinar em menos de 1 minuto.</option>
-                                        <option value="15. E foi assim que esse cachorro de 12 anos se tornou o sénior mais saudável do bairro.">15. E foi assim que esse cachorro de 12 anos se tornou o sénior mais saudável do bairro.</option>
-                                        <option value="16. Desde que a gente começou a entender a linguagem corporal dos pets do jeito certo, tudo mudou.">16. Desde que a gente começou a entender a linguagem corporal dos pets do jeito certo, tudo mudou.</option>
-                                        <option value="17. Como parar de se sentir culpado toda vez que deixa o cachorro em casa sozinho.">17. Como parar de se sentir culpado toda vez que deixa o cachorro em casa sozinho.</option>
-                                        <option value="18. É assim que a vida do seu cachorro parece antes, durante e depois de você descobrir o que ele realmente precisa.">18. É assim que a vida do seu cachorro parece antes, durante e depois de você descobrir o que ele realmente precisa.</option>
-                                        <option value="19. Há um ano, esse gato quase foi devolvido porque ninguém sabia o que havia de errado com ele.">19. Há um ano, esse gato quase foi devolvido porque ninguém sabia o que havia de errado com ele.</option>
-                                        <option value="20. Hoje esse cachorro corre como filhote aos 10 anos...">20. Hoje esse cachorro corre como filhote aos 10 anos...</option>
-                                        <option value="21. Coisas que a gente gostaria de saber no começo não depois de anos tentando e errando.">21. Coisas que a gente gostaria de saber no começo não depois de anos tentando e errando.</option>
-                                    </optgroup>
-                                    <optgroup label="Educação & Quebrando Mitos">
-                                        <option value="22. O dinheiro pode comprar a ração mais cara mas não pode comprar uma barriga saudável.">22. O dinheiro pode comprar a ração mais cara mas não pode comprar uma barriga saudável.</option>
-                                        <option value="23. O que realmente acontece com o seu cachorro se ele ficar 30 dias sem sair de casa?">23. O que realmente acontece com o seu cachorro se ele ficar 30 dias sem sair de casa?</option>
-                                        <option value="24. Explicando a saúde intestinal do seu gato como se fosse o cano da pia da cozinha.">24. Explicando a saúde intestinal do seu gato como se fosse o cano da pia da cozinha.</option>
-                                        <option value="25. Se você é o único tutor que não sabe isso sobre a digestão do cachorro vem que a gente te explica.">25. Se você é o único tutor que não sabe isso sobre a digestão do cachorro vem que a gente te explica.</option>
-                                        <option value="26. 5 coisas que aprendemos em anos trabalhando com pets que vamos te ensinar em 60 segundos.">26. 5 coisas que aprendemos em anos trabalhando com pets que vamos te ensinar em 60 segundos.</option>
-                                        <option value="27. Verdades que a gente gostaria que todo tutor soubesse - vindas de quem vive nesse mundo há anos.">27. Verdades que a gente gostaria que todo tutor soubesse - vindas de quem vive nesse mundo há anos.</option>
-                                        <option value="28. Anos de aprendizado com pets resumidos em 60 segundos.">28. Anos de aprendizado com pets resumidos em 60 segundos.</option>
-                                        <option value="29. Todo mundo cresceu achando que cuidar da pelagem do cachorro era só estética...">29. Todo mundo cresceu achando que cuidar da pelagem do cachorro era só estética...</option>
-                                        <option value="30. Se não te ensinaram a ler um rótulo de ração direito a gente ensina agora.">30. Se não te ensinaram a ler um rótulo de ração direito a gente ensina agora.</option>
-                                        <option value="31. Em 60 segundos vamos te ensinar mais sobre comportamento felino do que você aprendeu em toda a sua vida.">31. Em 60 segundos vamos te ensinar mais sobre comportamento felino do que você aprendeu em toda a sua vida.</option>
-                                        <option value="32. Como saber se o seu cachorro está feliz de verdade sem precisar adivinhar.">32. Como saber se o seu cachorro está feliz de verdade sem precisar adivinhar.</option>
-                                        <option value="33. Erros de cuidados com o pet que você provavelmente está cometendo agora mesmo e não fazia a menor ideia.">33. Erros de cuidados com o pet que você provavelmente está cometendo agora mesmo e não fazia a menor ideia.</option>
-                                    </optgroup>
-                                    <optgroup label="Curiosidade & Loop Aberto">
-                                        <option value="34. Tem algo acontecendo no mundo pet que todo tutor de cachorro precisa saber.">34. Tem algo acontecendo no mundo pet que todo tutor de cachorro precisa saber.</option>
-                                        <option value="35. São os mesmos sintomas mas o primeiro cachorro piorou e o segundo se recuperou completamente. Aqui está a única diferença.">35. São os mesmos sintomas mas o primeiro cachorro piorou e o segundo se recuperou completamente. Aqui está a única diferença.</option>
-                                        <option value="36. É assim que a gente hackeia a rotina de saúde articular do cachorro e reduz as contas do veterinário pela metade.">36. É assim que a gente hackeia a rotina de saúde articular do cachorro e reduz as contas do veterinário pela metade.</option>
-                                        <option value="37. Dar a ração errada pro seu gato todo dia pode fazer isso com os rins dele.">37. Dar a ração errada pro seu gato todo dia pode fazer isso com os rins dele.</option>
-                                        <option value="38. Fazer uma coisa simples todo dia pode transformar a pelagem do seu cachorro em 30 dias.">38. Fazer uma coisa simples todo dia pode transformar a pelagem do seu cachorro em 30 dias.</option>
-                                        <option value="39. Parece contra-intuitivo, mas deixar seu cachorro entediado de propósito pode deixá-lo mais saudável.">39. Parece contra-intuitivo, mas deixar seu cachorro entediado de propósito pode deixá-lo mais saudável.</option>
-                                        <option value="40. Existe uma forma de acalmar cachorro ansioso em segundos mas precisa ser usada com responsabilidade.">40. Existe uma forma de acalmar cachorro ansioso em segundos mas precisa ser usada com responsabilidade.</option>
-                                        <option value="41. Enquanto você debatia ração natural vs industrial, tem uma outra conversa acontecendo que pode mudar tudo.">41. Enquanto você debatia ração natural vs industrial, tem uma outra conversa acontecendo que pode mudar tudo.</option>
-                                    </optgroup>
-                                    <optgroup label="Antes & Depois / Contraste">
-                                        <option value="42. Testamos dezenas de rotinas para a digestão do cachorro até achar o detalhe que mudou tudo.">42. Testamos dezenas de rotinas para a digestão do cachorro até achar o detalhe que mudou tudo.</option>
-                                        <option value="43. Esse cachorro mal conseguia subir a escada. Hoje corre no parque. Isso aconteceu em 60 dias.">43. Esse cachorro mal conseguia subir a escada. Hoje corre no parque. Isso aconteceu em 60 dias.</option>
-                                        <option value="44. Em 2 anos, esse cachorro senior foi disso... pra isso em energia, mobilidade e qualidade de vida.">44. Em 2 anos, esse cachorro senior foi disso... pra isso em energia, mobilidade e qualidade de vida.</option>
-                                        <option value="45. É assim que o intestino do seu cachorro parece comendo ração ultraprocessada. E é assim com o suporte certo.">45. É assim que o intestino do seu cachorro parece comendo ração ultraprocessada. E é assim com o suporte certo.</option>
-                                    </optgroup>
-                                    <optgroup label="Fácil, Rápido & Para Tutores Ocupados">
-                                        <option value="46. Se você não tem tempo para um passeio longo com seu cachorro faça isso.">46. Se você não tem tempo para um passeio longo com seu cachorro faça isso.</option>
-                                        <option value="47. Tudo que dá pra melhorar na saúde do seu cachorro com apenas 5 minutos por dia.">47. Tudo que dá pra melhorar na saúde do seu cachorro com apenas 5 minutos por dia.</option>
-                                        <option value="48. Maneiras simples mas surpreendentemente efetivas pra melhorar a rotina de saúde do seu gato.">48. Maneiras simples mas surpreendentemente efetivas pra melhorar a rotina de saúde do seu gato.</option>
-                                        <option value="49. É isso que fazemos toda manhã com os pets daqui e por que o veterinário sempre fica satisfeito.">49. É isso que fazemos toda manhã com os pets daqui e por que o veterinário sempre fica satisfeito.</option>
-                                        <option value="50. Se você não tem uma rotina de cuidados pra o seu cachorro comece com essa versão mínima.">50. Se você não tem uma rotina de cuidados pra o seu cachorro comece com essa versão mínima.</option>
-                                    </optgroup>
-                                    <optgroup label="Aspiracional & Identidade de Tutor">
-                                        <option value="51. Você PODE ter um cachorro senior saudável e feliz mesmo sem gastar uma fortuna no veterinário.">51. Você PODE ter um cachorro senior saudável e feliz mesmo sem gastar uma fortuna no veterinário.</option>
-                                        <option value="52. Existe uma diferença enorme entre um tutor que está começando e alguém que realmente entende de animais.">52. Existe uma diferença enorme entre um tutor que está começando e alguém que realmente entende de animais.</option>
-                                        <option value="53. 5 coisas que os tutores de cachorro mais dedicados estão fazendo diferente em 2025.">53. 5 coisas que os tutores de cachorro mais dedicados estão fazendo diferente em 2025.</option>
-                                        <option value="54. Essas são as 3 coisas que todo tutor responsável de gato deveria saber antes do gato completar 5 anos.">54. Essas são as 3 coisas que todo tutor responsável de gato deveria saber antes do gato completar 5 anos.</option>
-                                        <option value="55. Coisas que a gente não permite na rotina dos pets daqui - principalmente por conta do que sabe.">55. Coisas que a gente não permite na rotina dos pets daqui - principalmente por conta do que sabe.</option>
-                                        <option value="56. Coisas que a gente não compactua trabalhando com saúde animal há anos.">56. Coisas que a gente não compactua trabalhando com saúde animal há anos.</option>
-                                    </optgroup>
-                                    <optgroup label="Recomendações & Listas">
-                                        <option value="57. Documentários, livros e canais que vão te tornar um tutor muito melhor sem você nem perceber.">57. Documentários, livros e canais que vão te tornar um tutor muito melhor sem você nem perceber.</option>
-                                        <option value="58. 3 documentários sobre comportamento animal que vão mudar a forma como você vê o seu pet pra sempre.">58. 3 documentários sobre comportamento animal que vão mudar a forma como você vê o seu pet pra sempre.</option>
-                                        <option value="59. 5 dicas pra manter o seu cachorro sênior confortável mesmo que ele já tenha problemas articulares.">59. 5 dicas pra manter o seu cachorro sênior confortável mesmo que ele já tenha problemas articulares.</option>
-                                    </optgroup>
-                                    <optgroup label="Urgência & Tempo">
-                                        <option value="60. Se o seu cachorro tem 7 anos ou mais, essas são as 5 coisas que você precisa começar a fazer agora.">60. Se o seu cachorro tem 7 anos ou mais, essas são as 5 coisas que você precisa começar a fazer agora.</option>
-                                        <option value="61. Ração seca ou ração úmida? Qual é melhor pra saúde dos rins do seu gato?">61. Ração seca ou ração úmida? Qual é melhor pra saúde dos rins do seu gato?</option>
-                                        <option value="62. Se o seu cachorro coça muito tem 3 coisas que você precisa verificar com urgência.">62. Se o seu cachorro coça muito tem 3 coisas que você precisa verificar com urgência.</option>
-                                        <option value="63. Trocas inúteis que tutores de pet fazem o tempo todo e que não mudam nada na prática.">63. Trocas inúteis que tutores de pet fazem o tempo todo e que não mudam nada na prática.</option>
-                                        <option value="64. Acabou de adotar um cachorro? Não pule essas 3 coisas na primeira semana.">64. Acabou de adotar um cachorro? Não pule essas 3 coisas na primeira semana.</option>
-                                    </optgroup>
+                                    <option value="" disabled selected>Selecione um gancho...</option>
+                                    <option value="1. Os truques proibidos...">1. Os truques proibidos...</option>
+                                    <option value="7. Você sabe se seu pet te ama?">7. Você sabe se seu pet te ama?</option>
+                                    <option value="14. Levamos anos para aprender isso...">14. Levamos anos para aprender isso...</option>
+                                    <option value="22. Dinheiro não compra barriga saudável.">22. Dinheiro não compra barriga saudável.</option>
                                 </select>
                             </div>
-
                             <div class="col-12">
-                                <label class="form-label">Notas Adicionais (Opcional)</label>
-                                <textarea id="notas" class="form-control" rows="2" placeholder="Ex: Focar no produto L-Lysine..."></textarea>
+                                <label class="form-label">Notas Adicionais</label>
+                                <textarea id="notas" class="form-control" rows="2"></textarea>
                             </div>
-                            <div class="col-12 mt-3">
-                                <button type="submit" id="btnGerar" class="btn btn-primary w-100 py-3 fw-bold fs-5 shadow-sm">
-                                    🪄 GERAR ROTEIRO
-                                </button>
+                            <div class="col-12 d-flex gap-2">
+                                <button type="button" onclick="gerarAleatorio()" class="btn btn-random w-25 fw-bold">🎲 Aleatório</button>
+                                <button type="submit" class="btn btn-primary flex-grow-1 fw-bold">🚀 GERAR ROTEIRO</button>
                             </div>
                         </div>
                     </form>
                 </div>
 
-                <div id="loading" class="text-center d-none my-5">
-                    <div class="spinner-border text-brand" style="width: 3rem; height: 3rem;" role="status"></div>
-                    <h5 class="mt-4 fw-bold text-dark">Processando...</h5>
-                    <p class="text-muted">A Inteligência Artificial está escrevendo o seu roteiro.</p>
+                <div id="painelRevisao" class="card p-5 d-none text-center">
+                    <h4 class="fw-bold mb-4">Confirmar Combinação Inteligente? 🧠</h4>
+                    <div class="text-start bg-light p-4 rounded mb-4" id="resumoCombinacao"></div>
+                    <div class="d-flex gap-2">
+                        <button onclick="gerarAleatorio()" class="btn btn-outline-secondary w-50">🔄 Girar Outra</button>
+                        <button onclick="confirmarEnvio()" class="btn btn-primary w-50 fw-bold">✅ Confirmar e Criar</button>
+                    </div>
                 </div>
 
-                <div id="resultadoContainer" class="card p-5 d-none border-brand border-2">
+                <div id="loading" class="text-center d-none my-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <h5 class="mt-3">Claude está redigindo o briefing...</h5>
+                </div>
+
+                <div id="resultadoContainer" class="card p-5 d-none">
                     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                        <h4 class="m-0 text-brand fw-bold" id="resultadoTitulo">✅ Briefing Finalizado</h4>
-                        <div class="d-flex gap-2">
-                            <button onclick="copiarTexto()" class="btn btn-outline-brand fw-bold px-4">📋 Copiar Roteiro</button>
-                            <button onclick="novaSessao()" class="btn btn-light px-4">Nova Geração</button>
-                        </div>
+                        <h4 class="m-0 text-primary fw-bold" id="resultadoTitulo">✅ Briefing Finalizado</h4>
+                        <button onclick="copiarTexto()" class="btn btn-outline-primary">📋 Copiar</button>
                     </div>
-                    <div id="resultado" class="p-4 bg-light rounded shadow-sm border border-light text-dark"></div>
+                    <div id="resultado" class="p-4 bg-light rounded"></div>
+                    <button onclick="novaSessao()" class="btn btn-link mt-3 text-muted">Gerar outro roteiro</button>
                 </div>
             </div>
         </div>
@@ -335,42 +141,35 @@
     <script>
         document.addEventListener("DOMContentLoaded", carregarHistorico);
 
-        async function carregarHistorico() {
-            try {
-                const response = await fetch('/api/historico');
-                const roteiros = await response.json();
-                
-                const lista = document.getElementById('listaHistorico');
-                lista.innerHTML = '';
-
-                if(roteiros.length === 0) {
-                    lista.innerHTML = '<div class="p-4 text-center text-muted small">Nenhum roteiro salvo.</div>';
-                    return;
-                }
-
-                roteiros.forEach(rot => {
-                    const data = new Date(rot.dataCriacao).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-                    
-                    const div = document.createElement('div');
-                    div.className = 'historico-item';
-                    div.onclick = () => exibirRoteiroSalvo(rot);
-                    
-                    const temaNome = rot.tema || 'Tema Não Definido';
-                    const tituloCurto = temaNome.includes('.') ? temaNome.split('.')[1].trim() : temaNome;
-
-                    div.innerHTML = `
-                        <div class="historico-titulo">${tituloCurto}</div>
-                        <div class="historico-data">${data} • ${rot.mercado || 'BR'}</div>
-                    `;
-                    lista.appendChild(div);
-                });
-            } catch (error) {
-                console.error("Erro ao carregar histórico", error);
+        function gerarAleatorio() {
+            const selects = ['mercado', 'narrador', 'formato', 'tema', 'gancho'];
+            selects.forEach(id => {
+                const el = document.getElementById(id);
+                const options = Array.from(el.options).filter(o => !o.disabled);
+                const randomOption = options[Math.floor(Math.random() * options.length)];
+                el.value = randomOption.value;
+            });
+            // Se estiver na tela de revisão, atualiza o resumo
+            if (!document.getElementById('painelRevisao').classList.contains('d-none')) {
+                revisarPedido();
             }
         }
 
-        async function gerarRoteiro() {
-            const btn = document.getElementById('btnGerar');
+        function revisarPedido() {
+            const resumo = `
+                <strong>Mercado:</strong> ${document.getElementById('mercado').value}<br>
+                <strong>Narrador:</strong> ${document.getElementById('narrador').value}<br>
+                <strong>Formato:</strong> ${document.getElementById('formato').value}<br>
+                <strong>Tema:</strong> ${document.getElementById('tema').value}<br>
+                <strong>Gancho:</strong> ${document.getElementById('gancho').value}
+            `;
+            document.getElementById('resumoCombinacao').innerHTML = resumo;
+            document.getElementById('painelCriacao').classList.add('d-none');
+            document.getElementById('painelRevisao').classList.remove('d-none');
+        }
+
+        async function confirmarEnvio() {
+            const painelRevisao = document.getElementById('painelRevisao');
             const loading = document.getElementById('loading');
             const resContainer = document.getElementById('resultadoContainer');
             const resDiv = document.getElementById('resultado');
@@ -384,10 +183,8 @@
                 notas: document.getElementById('notas').value
             };
 
-            btn.disabled = true;
+            painelRevisao.classList.add('d-none');
             loading.classList.remove('d-none');
-            resContainer.classList.add('d-none');
-            document.getElementById('painelCriacao').classList.add('d-none');
 
             try {
                 const response = await fetch('/api/gerar', {
@@ -396,40 +193,47 @@
                     body: JSON.stringify(dados)
                 });
                 const data = await response.json();
-                
                 resDiv.innerText = data.roteiro;
-                document.getElementById('resultadoTitulo').innerText = "✅ Briefing Finalizado";
                 resContainer.classList.remove('d-none');
-                
                 carregarHistorico();
             } catch (error) {
-                alert('Erro na geração. Verifique os logs.');
-                document.getElementById('painelCriacao').classList.remove('d-none');
+                alert('Erro ao gerar. Verifique o console.');
+                novaSessao();
             } finally {
-                btn.disabled = false;
                 loading.classList.add('d-none');
             }
         }
 
-        function exibirRoteiroSalvo(roteiro) {
+        async function carregarHistorico() {
+            const response = await fetch('/api/historico');
+            const roteiros = await response.json();
+            const lista = document.getElementById('listaHistorico');
+            lista.innerHTML = roteiros.map(rot => `
+                <div class="historico-item" onclick='exibirRoteiroSalvo(${JSON.stringify(rot)})'>
+                    <div class="historico-titulo">${rot.tema}</div>
+                    <div class="historico-data">${new Date(rot.dataCriacao).toLocaleString()} • ${rot.mercado}</div>
+                </div>
+            `).join('');
+            if (roteiros.length === 0) lista.innerHTML = '<div class="p-4 text-center text-muted small">Nenhum roteiro salvo.</div>';
+        }
+
+        function exibirRoteiroSalvo(rot) {
             document.getElementById('painelCriacao').classList.add('d-none');
+            document.getElementById('painelRevisao').classList.add('d-none');
             document.getElementById('resultadoContainer').classList.remove('d-none');
-            
-            const dataStr = new Date(roteiro.dataCriacao).toLocaleString('pt-BR');
-            document.getElementById('resultadoTitulo').innerText = `🕒 Histórico (${dataStr})`;
-            document.getElementById('resultado').innerText = roteiro.conteudo;
+            document.getElementById('resultado').innerText = rot.conteudo;
         }
 
         function novaSessao() {
             document.getElementById('resultadoContainer').classList.add('d-none');
+            document.getElementById('painelRevisao').classList.add('d-none');
             document.getElementById('painelCriacao').classList.remove('d-none');
             document.getElementById('formRoteiro').reset();
         }
 
         function copiarTexto() {
-            const texto = document.getElementById('resultado').innerText;
-            navigator.clipboard.writeText(texto);
-            alert('Copiado com sucesso!');
+            navigator.clipboard.writeText(document.getElementById('resultado').innerText);
+            alert('Copiado!');
         }
     </script>
 </body>
