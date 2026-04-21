@@ -3,11 +3,17 @@ const express = require('express');
 const cors = require('cors');
 const Anthropic = require('@anthropic-ai/sdk');
 const mongoose = require('mongoose');
+const path = require('path'); 
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // 1. Conexão com o Banco de Dados (MongoDB)
 mongoose.connect(process.env.MONGODB_URI)
