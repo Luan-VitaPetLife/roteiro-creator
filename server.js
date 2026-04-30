@@ -10,12 +10,29 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 1. Conexão com MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("✅ MongoDB Conectado"))
-  .catch(err => console.error("❌ Erro MongoDB:", err));
+// ==========================================
+// 1. CONEXÃO MONGODB OTIMIZADA PARA SERVERLESS (VERCEL)
+// ==========================================
+let isConnected = false;
 
-// Modelos do Banco de Dados
+const connectDB = async () => {
+  if (isConnected) return; // Usa a conexão em cache se o servidor já estiver acordado
+  
+  try {
+    const db = await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000 // Evita que a Vercel trave infinitamente
+    });
+    isConnected = db.connections[0].readyState === 1;
+    console.log("✅ MongoDB Conectado (Modo Serverless)");
+  } catch (err) {
+    console.error("❌ Erro de conexão MongoDB:", err);
+    throw new Error("Falha ao conectar com o banco de dados");
+  }
+};
+
+// ==========================================
+// MODELOS DO BANCO DE DADOS
+// ==========================================
 const RoteiroSchema = new mongoose.Schema({
   mercado: String, tema: String, conteudo: String, dataCriacao: { type: Date, default: Date.now }
 });
@@ -27,15 +44,12 @@ const ConfigSchema = new mongoose.Schema({
 const Config = mongoose.model('Config', ConfigSchema);
 
 const LixeiraSchema = new mongoose.Schema({
-  categoria: String,
-  valor: String,
-  dataExclusao: { type: Date, default: Date.now, expires: 864000 } 
+  categoria: String, valor: String, dataExclusao: { type: Date, default: Date.now, expires: 864000 } 
 });
 const Lixeira = mongoose.model('Lixeira', LixeiraSchema);
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// NOVO PROMPT OFICIAL E COMPLETO
 const SYSTEM_PROMPT = `
 Identidade O que você é
 Você é um gerador inteligente de roteiros para redes sociais da Coco and Luna. Funciona como um
@@ -382,6 +396,7 @@ Quando aprovado, monte o briefing completo. Responda DIRETAMENTE com o Roteiro e
 // ==========================================
 app.post('/api/gerar', async (req, res) => {
   try {
+    await connectDB(); // Garante conexão ativa antes de operar
     const { mercado, narrador, formato, tema, gancho, notas, anexo } = req.body;
 
     const contentArray = [
@@ -420,8 +435,10 @@ app.post('/api/gerar', async (req, res) => {
 });
 
 app.get('/api/historico', async (req, res) => {
-  try { res.json(await Roteiro.find().sort({ dataCriacao: -1 })); } 
-  catch (error) { res.status(500).json({ error: error.message }); }
+  try { 
+    await connectDB();
+    res.json(await Roteiro.find().sort({ dataCriacao: -1 })); 
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 // ==========================================
@@ -429,6 +446,7 @@ app.get('/api/historico', async (req, res) => {
 // ==========================================
 app.get('/api/configuracoes', async (req, res) => {
   try {
+    await connectDB();
     let config = await Config.findOne();
     if (!config) config = await Config.create({ mercados: [], narradores: [], formatos: [], temas: [], ganchos: [] });
     res.json(config);
@@ -437,6 +455,7 @@ app.get('/api/configuracoes', async (req, res) => {
 
 app.post('/api/configuracoes', async (req, res) => {
   try {
+    await connectDB();
     let config = await Config.findOne();
     if (config) {
       config.mercados = req.body.mercados; config.narradores = req.body.narradores; config.formatos = req.body.formatos; config.temas = req.body.temas; config.ganchos = req.body.ganchos;
@@ -451,6 +470,7 @@ app.post('/api/configuracoes', async (req, res) => {
 // ==========================================
 app.post('/api/lixeira', async (req, res) => {
   try {
+    await connectDB();
     const { categoria, valor } = req.body;
     await Lixeira.create({ categoria, valor });
     res.json({ success: true });
@@ -458,12 +478,15 @@ app.post('/api/lixeira', async (req, res) => {
 });
 
 app.get('/api/lixeira', async (req, res) => {
-  try { res.json(await Lixeira.find().sort({ dataExclusao: -1 })); } 
-  catch (error) { res.status(500).json({ error: error.message }); }
+  try { 
+    await connectDB();
+    res.json(await Lixeira.find().sort({ dataExclusao: -1 })); 
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 app.post('/api/lixeira/restaurar/:id', async (req, res) => {
   try {
+    await connectDB();
     const item = await Lixeira.findById(req.params.id);
     if (item) {
       const config = await Config.findOne();
@@ -478,12 +501,19 @@ app.post('/api/lixeira/restaurar/:id', async (req, res) => {
 });
 
 app.delete('/api/lixeira/:id', async (req, res) => {
-  try { await Lixeira.findByIdAndDelete(req.params.id); res.json({ success: true }); } 
-  catch (error) { res.status(500).json({ error: error.message }); }
+  try { 
+    await connectDB();
+    await Lixeira.findByIdAndDelete(req.params.id); res.json({ success: true }); 
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 // Front-end principal
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Sistema Online na porta ${PORT}`));
+// Exportação compatível com Serverless na Vercel
+module.exports = app;
+
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`🚀 Sistema Online na porta ${PORT}`));
+}
