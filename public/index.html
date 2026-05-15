@@ -4,53 +4,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Roteiros | Coco and Luna</title>
-    <link rel="icon" type="image/x-icon" href="/caneta-e-papel.png">
+    <link rel="shortcut icon" href="./caneta-e-papel.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
-        :root { --brand-blue: #2B5FED; --brand-blue-hover: #1e45b3; --sidebar-bg: #111827; --sidebar-hover: #1f2937; }
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; height: 100vh; overflow: hidden; }
-        .app-container { display: flex; height: 100vh; flex-direction: row; }
-        .sidebar { width: 320px; background-color: var(--sidebar-bg); color: #f9fafb; display: flex; flex-direction: column; overflow-y: auto; z-index: 100; border-right: 1px solid #374151; transition: all 0.3s ease; }
-        .sidebar-header { padding: 24px 20px; border-bottom: 1px solid #374151; position: sticky; top: 0; background: var(--sidebar-bg); z-index: 11; }
-        .historico-item { padding: 16px 20px; border-bottom: 1px solid #374151; cursor: pointer; transition: all 0.2s ease; }
-        .historico-item:hover { background-color: var(--sidebar-hover); border-left: 4px solid var(--brand-blue); }
-        .historico-titulo { font-size: 0.85rem; font-weight: 500; line-height: 1.2; }
-        .historico-data { font-size: 0.75rem; color: #9ca3af; margin-top: 4px; }
-        .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; position: relative; }
-        .max-w-custom { max-width: 900px; margin: 0 auto; }
-        .card { border: none; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .form-label { font-weight: 600; color: #374151; font-size: 0.9rem; margin-bottom: 8px; }
-        .btn-primary { background-color: var(--brand-blue); border: none; border-radius: 8px; padding: 12px; transition: 0.2s; }
-        .btn-primary:hover { background-color: var(--brand-blue-hover); transform: translateY(-1px); }
-        .btn-random { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; transition: 0.2s; }
-        .btn-random:hover { background-color: #e2e8f0; color: var(--brand-blue); border-color: var(--brand-blue); }
-        optgroup { font-weight: bold; color: var(--brand-blue); }
-        .api-info { font-size: 0.8rem; color: #6b7280; line-height: 1.4; display: block; margin-top: 10px; }
+        :root { 
+            --brand-blue: #2B5FED; 
+            --brand-blue-hover: #1e45b3; 
+            --brand-red: #ff3153;
+            --brand-red-hover: #e02947;
+            --bg-main: #ebf3fe;
+            --sidebar-bg: #ffffff; 
+            --sidebar-hover: #f8fafc; 
+            --text-dark: #1e293b;
+            --radius-card: 24px;
+            --radius-btn: 14px;
+            --radius-input: 12px;
+        }
         
-        .markdown-body { font-size: 0.95rem; line-height: 1.6; color: #1f2937; }
-        .markdown-body table { width: 100%; margin-bottom: 1rem; border-collapse: collapse; }
-        .markdown-body th, .markdown-body td { padding: 0.75rem; vertical-align: top; border: 1px solid #dee2e6; }
-        .markdown-body thead th { background-color: #f8f9fa; color: var(--brand-blue); }
+        /* Fonte padronizada para Lato */
+        body { font-family: 'Lato', sans-serif; background-color: var(--bg-main); color: var(--text-dark); height: 100vh; overflow: hidden; }
+        .app-container { display: flex; height: 100vh; flex-direction: row; }
+        
+        /* Sidebar Clean + Resize Logic */
+        .sidebar { position: relative; width: 340px; min-width: 80px; max-width: 600px; background-color: var(--sidebar-bg); color: var(--text-dark); display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; z-index: 100; box-shadow: 4px 0 24px rgba(43, 95, 237, 0.04); transition: width 0.3s ease; border-right: none; }
+        .sidebar.collapsed { width: 80px !important; }
+        .sidebar-resizer { width: 6px; cursor: col-resize; position: absolute; right: 0; top: 0; bottom: 0; z-index: 105; background: transparent; transition: 0.2s; }
+        .sidebar-resizer:hover, .sidebar-resizer.active { background: rgba(43, 95, 237, 0.2); }
+        
+        .sidebar-header { padding: 30px 20px 20px; position: sticky; top: 0; background: var(--sidebar-bg); z-index: 11; }
+        .hide-on-collapse { transition: opacity 0.2s; }
+        .sidebar.collapsed .hide-on-collapse { display: none !important; }
+        .sidebar.collapsed .px-4 { padding-left: 10px !important; padding-right: 10px !important; }
+        .sidebar.collapsed .btn { padding: 10px 0; }
+        .sidebar.collapsed .btn span { display: none; }
+        
+        .historico-item { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: all 0.2s ease; border-radius: 12px; margin: 4px 12px; }
+        .sidebar.collapsed .historico-item { padding: 10px; text-align: center; }
+        .sidebar.collapsed .historico-item .historico-titulo, .sidebar.collapsed .historico-item .historico-data { display: none; }
+        .historico-item:hover { background-color: var(--sidebar-hover); transform: translateX(4px); }
+        .historico-titulo { font-size: 0.95rem; font-weight: 700; line-height: 1.3; color: var(--brand-blue); }
+        .historico-data { font-size: 0.8rem; color: #64748b; margin-top: 6px; font-weight: 400; }
+        
+        /* Main Content */
+        .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; position: relative; }
+        .max-w-custom { max-width: 950px; margin: 0 auto; }
+        
+        /* Cards & Formulários */
+        .card { border: none; border-radius: var(--radius-card); box-shadow: 0 12px 40px rgba(43, 95, 237, 0.06); background-color: #ffffff; }
+        .form-label { font-weight: 700; color: #334155; font-size: 0.85rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .form-control, .form-select { border-radius: var(--radius-input); border: 1px solid #e2e8f0; padding: 14px 16px; background-color: #f8fafc; font-size: 0.95rem; color: #334155; transition: all 0.2s; box-shadow: none !important; }
+        .form-control:focus, .form-select:focus { border-color: var(--brand-blue); background-color: #ffffff; box-shadow: 0 0 0 4px rgba(43, 95, 237, 0.1) !important; }
+        
+        /* Botões */
+        .btn { border-radius: var(--radius-btn); padding: 14px 24px; font-weight: 700; font-size: 0.95rem; transition: all 0.2s ease; letter-spacing: 0.3px; }
+        .btn-primary { background-color: var(--brand-blue); border: none; color: white; box-shadow: 0 4px 12px rgba(43, 95, 237, 0.2); }
+        .btn-primary:hover { background-color: var(--brand-blue-hover); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(43, 95, 237, 0.3); color: white; }
+        .btn-danger { background-color: var(--brand-red); border: none; color: white; box-shadow: 0 4px 12px rgba(255, 49, 83, 0.2); }
+        .btn-danger:hover { background-color: var(--brand-red-hover); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(255, 49, 83, 0.3); color: white; }
+        .btn-random { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .btn-random:hover { background-color: #e2e8f0; color: var(--brand-blue); border-color: var(--brand-blue); }
+        .btn-outline-primary { color: var(--brand-blue); border-color: var(--brand-blue); }
+        .btn-outline-primary:hover { background-color: var(--brand-blue); color: white; }
+        
+        optgroup { font-weight: 900; color: var(--brand-blue); }
+        .api-info { font-size: 0.85rem; color: #94a3b8; line-height: 1.5; display: block; margin-top: 16px; font-weight: 400; }
+        
+        /* Markdown Renderer */
+        .markdown-body { font-size: 1rem; line-height: 1.7; color: #334155; }
+        .markdown-body table { width: 100%; margin-bottom: 1.5rem; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .markdown-body th, .markdown-body td { padding: 12px 16px; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; }
+        .markdown-body th:last-child, .markdown-body td:last-child { border-right: none; }
+        .markdown-body tr:last-child td { border-bottom: none; }
+        .markdown-body thead th { background-color: #f8fafc; color: var(--brand-blue); font-weight: 900; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
         .markdown-body p, .markdown-body li, .markdown-body tr, .markdown-body h1, .markdown-body h2 { page-break-inside: avoid !important; }
         
-        .mobile-header { display: none; background-color: var(--sidebar-bg); color: white; padding: 16px 20px; align-items: center; justify-content: space-between; z-index: 101;}
-        .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 50; transition: 0.3s; }
-
+        /* Layout Mobile */
+        .mobile-header { display: none; background-color: #ffffff; color: var(--text-dark); padding: 16px 24px; align-items: center; justify-content: space-between; z-index: 101; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 50; transition: 0.3s; }
+        
         @media (max-width: 768px) {
             body { overflow: auto; }
             .app-container { flex-direction: column; height: auto; min-height: 100vh; }
             .mobile-header { display: flex; position: sticky; top: 0; }
-            .sidebar { position: fixed; left: -320px; top: 0; bottom: 0; height: 100%; box-shadow: 4px 0 15px rgba(0,0,0,0.3); }
+            .sidebar { position: fixed; left: -340px; top: 0; bottom: 0; height: 100%; box-shadow: 10px 0 30px rgba(0,0,0,0.1); width: 280px !important; }
+            .sidebar-resizer { display: none; }
             .sidebar.active { left: 0; }
             .overlay.active { display: block; }
             .main-content { padding: 20px 15px; }
-            .card { padding: 24px !important; }
-            .mobile-stack { flex-direction: column !important; width: 100%; gap: 10px; }
+            .card { padding: 30px 20px !important; }
+            .mobile-stack { flex-direction: column !important; width: 100%; gap: 12px; }
             .mobile-stack button { width: 100% !important; margin: 0; }
         }
     </style>
@@ -59,26 +106,39 @@
     <div class="app-container">
         
         <div class="mobile-header">
-            <h5 class="m-0 fs-6 fw-bold">Coco and Luna Labs</h5>
-            <button class="btn btn-sm btn-outline-light" onclick="toggleMenu()">☰ Menu</button>
+            <img src="coco-and-luna-logo.png" alt="Coco and Luna" style="max-height: 28px; object-fit: contain;">
+            <button class="btn btn-sm btn-light border fw-bold text-dark" onclick="toggleMenuMobile()">Menu</button>
         </div>
-        <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+        <div class="overlay" id="overlay" onclick="toggleMenuMobile()"></div>
 
         <div class="sidebar" id="sidebar">
+            <div class="sidebar-resizer" id="sidebarResizer"></div>
+            
             <div class="sidebar-header d-flex justify-content-between align-items-center">
-                <h5 class="m-0 fs-6 fw-bold d-none d-md-block">Coco and Luna - Roteiros</h5>
-                <button onclick="novaSessao()" class="btn btn-sm btn-outline-light fw-bold"> + Novo</button>
+                <img src="coco-and-luna-logo.png" alt="Coco and Luna" class="hide-on-collapse" style="max-height: 36px; object-fit: contain;">
+                <button class="btn btn-sm btn-light border text-dark p-2" onclick="toggleSidebarCollapse()" title="Recolher Menu">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
             </div>
             
-            <div class="p-3 border-bottom border-secondary" style="background-color: rgba(0,0,0,0.2);">
-                <button onclick="abrirConfiguracoes()" class="btn btn-sm btn-outline-secondary w-100 text-light mb-3">⚙️ Configurações</button>
-                <div class="form-group">
-                    <label class="form-label text-muted small mb-1">Pesquisar por data:</label>
-                    <input type="date" id="filtroDataHistorico" class="form-control form-control-sm bg-dark text-light border-secondary" onchange="carregarHistorico()">
+            <div class="px-4 pb-4 border-bottom" style="border-color: #f1f5f9 !important;">
+                <button onclick="novaSessao()" class="btn btn-primary w-100 mb-3" title="Novo Roteiro">
+                    ➕ <span class="hide-on-collapse ms-1">Novo Roteiro</span>
+                </button>
+                <button onclick="abrirConfiguracoes()" class="btn btn-light border w-100 mb-4 text-dark fw-bold bg-white" title="Configurações">
+                    ⚙️ <span class="hide-on-collapse ms-1">Configurações</span>
+                </button>
+                
+                <div class="form-group hide-on-collapse">
+                    <label class="form-label text-muted small mb-2">Filtrar por data</label>
+                    <input type="date" id="filtroDataHistorico" class="form-control" onchange="carregarHistorico()">
                 </div>
             </div>
 
-            <div id="listaHistorico" class="flex-grow-1"></div>
+            <div class="px-3 pt-4 pb-2 hide-on-collapse">
+                <h6 class="text-uppercase fw-bold text-muted small ms-2" style="letter-spacing: 0.5px;">Histórico Recente</h6>
+            </div>
+            <div id="listaHistorico" class="flex-grow-1 pb-4"></div>
         </div>
 
         <div class="main-content">
@@ -86,21 +146,22 @@
                 
                 <div class="card p-5 mb-4" id="painelCriacao">
                     <div class="text-center mb-5">
-                        <h2 class="h3 fw-bold text-dark">Gerador de Roteiros</h2>
+                        <h2 class="h3 fw-bold text-dark mb-2">Máquina de Roteiros</h2>
+                        <p class="text-muted">Combine os elementos estratégicos para gerar o briefing.</p>
                     </div>
                     
                     <form id="formRoteiro" onsubmit="event.preventDefault(); revisarPedido();">
                         <div class="row g-4">
                             <div class="col-md-4">
                                 <label class="form-label">Mercado</label>
-                                <select id="mercado" class="form-select bg-light">
-                                    <option value="Brasil BR 🇧🇷">Brasil BR</option>
-                                    <option value="EUA US 🇺🇸">EUA US</option>
+                                <select id="mercado" class="form-select">
+                                    <option value="Brasil">Brasil</option>
+                                    <option value="EUA">EUA</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Narrador</label>
-                                <select id="narrador" class="form-select bg-light">
+                                <select id="narrador" class="form-select">
                                     <option value="Veterinária da marca">Veterinária da marca</option>
                                     <option value="Colaborador(a) da empresa">Colaborador(a) da empresa</option>
                                     <option value="Pet do colaborador">Pet do colaborador</option>
@@ -109,7 +170,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Formato Narrativo</label>
-                                <select id="formato" class="form-select bg-light">
+                                <select id="formato" class="form-select">
                                     <option value="Tela dividida">Tela dividida</option>
                                     <option value="Palestrinha">Palestrinha</option>
                                     <option value="Narrado">Narrado</option>
@@ -255,7 +316,7 @@
                                         <option value="52. Existe uma diferença enorme entre um tutor iniciante e alguém que realmente entende de animais.">52. Existe uma diferença enorme entre um tutor iniciante e alguém que realmente entende de animais.</option>
                                         <option value="53. 5 coisas que os tutores de cachorro mais dedicados estão fazendo diferente em 2025.">53. 5 coisas que os tutores de cachorro mais dedicados estão fazendo diferente em 2025.</option>
                                         <option value="54. Essas são as 3 coisas que todo tutor responsável de gato deveria saber antes do gato completar 5 anos.">54. Essas são as 3 coisas que todo tutor responsável de gato deveria saber antes do gato completar 5 anos.</option>
-                                        <option value="55. Coisas que a gente não permite na rotina dos pets daqui - principalmente por conta do que sabe.">55. Coisas que a gente não permite na rotina dos pets daqui - principalmente por conta do que sabe.</option>
+                                        <option value="55. Coisas que a gente não permite na rotina dos pets daqui - principalmente por conta do que sabe.">55. Coisas que a gente não permite na rotina dos pets daqui - mainly por conta do que sabe.</option>
                                         <option value="56. Coisas que a gente não compactua trabalhando com saúde animal há anos.">56. Coisas que a gente não compactua trabalhando com saúde animal há anos.</option>
                                     </optgroup>
                                     <optgroup label="Recomendações & Listas">
@@ -274,49 +335,55 @@
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label d-flex justify-content-between align-items-center w-100 mb-2">
-                                    Notas Adicionais
-                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle fw-bold" style="width: 28px; height: 28px; padding: 0; line-height: 0;" onclick="document.getElementById('anexoInput').click()" title="Adicionar qualquer anexo (Imagem, PDF, Documento)">+</button>
-                                </label>
-                                <textarea id="notas" class="form-control" rows="2" placeholder="Ex: Focar no produto L-Lysine..."></textarea>
+                                <div class="d-flex justify-content-between align-items-end mb-2 w-100">
+                                    <label class="form-label m-0">Notas Adicionais</label>
+                                    <button type="button" class="btn btn-sm btn-light border rounded-pill fw-bold text-dark px-3 py-1 shadow-sm" onclick="document.getElementById('anexoInput').click()" title="Adicionar Documentos">Anexar Arquivos</button>
+                                </div>
+                                <textarea id="notas" class="form-control" rows="3" placeholder="Insira direcionamentos extras ou contexto para o Claude..."></textarea>
                                 
-                                <input type="file" id="anexoInput" class="d-none">
-                                <div id="anexoPreview" class="small text-muted mt-2 d-none p-2 bg-white border rounded"></div>
+                                <input type="file" id="anexoInput" class="d-none" multiple>
+                                <div id="anexoPreview" class="mt-3 d-flex flex-column gap-2"></div>
                             </div>
                             
-                            <div class="col-12 d-flex mobile-stack gap-2 mt-3">
-                                <button type="button" onclick="gerarAleatorio()" class="btn btn-random w-25 fw-bold text-nowrap">🎲 Aleatório</button>
-                                <button type="submit" class="btn btn-primary flex-grow-1 fw-bold">🚀 GERAR ROTEIRO</button>
+                            <div class="col-12 d-flex mobile-stack gap-3 mt-4">
+                                <button type="button" onclick="gerarAleatorio()" class="btn btn-random w-25 fw-bold text-nowrap">Aleatório</button>
+                                <button type="submit" class="btn btn-primary flex-grow-1 fw-bold fs-6">Gerar Roteiro</button>
+                            </div>
+
+                            <div class="col-12 text-center mt-3">
+                                <small class="api-info">
+                                    Conectado à API Stateless da Anthropic (Claude Opus). O modelo não retém memória para garantir criatividade bruta em cada nova geração.
+                                </small>
                             </div>
                         </div>
                     </form>
                 </div>
 
                 <div id="painelRevisao" class="card p-5 d-none text-center">
-                    <h4 class="fw-bold mb-4">Confirmar Combinação? 🧠</h4>
-                    <div class="text-start bg-light p-4 rounded mb-4 border" id="resumoCombinacao" style="font-size: 0.95rem;"></div>
-                    <div class="d-flex mobile-stack gap-2">
-                        <button onclick="voltarEdicao()" class="btn btn-light flex-grow-1 border fw-600">⬅️ Voltar</button>
-                        <button onclick="gerarAleatorio()" class="btn btn-outline-secondary flex-grow-1 fw-600">🔄 Girar Aleatório</button>
-                        <button onclick="confirmarEnvio()" class="btn btn-primary flex-grow-1 fw-bold">✅ Confirmar</button>
+                    <h4 class="fw-bold mb-4 text-dark">Confirmar Estratégia de Conteúdo</h4>
+                    <div class="text-start bg-light p-4 rounded mb-5 border" id="resumoCombinacao" style="font-size: 0.95rem; line-height: 1.6;"></div>
+                    <div class="d-flex mobile-stack gap-3">
+                        <button onclick="voltarEdicao()" class="btn btn-light border flex-grow-1 text-dark">Voltar</button>
+                        <button onclick="gerarAleatorio()" class="btn btn-outline-primary flex-grow-1">Girar Aleatório</button>
+                        <button onclick="confirmarEnvio()" class="btn btn-primary flex-grow-1">Confirmar e Gerar</button>
                     </div>
                 </div>
 
                 <div id="painelConfiguracoes" class="card p-5 d-none">
                     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                        <h4 class="m-0 text-dark fw-bold">⚙️ Gerir Opções</h4>
-                        <div>
-                            <button onclick="abrirLixeira()" class="btn btn-outline-danger me-3 fw-bold">🗑️ Lixeira</button>
-                            <button onclick="novaSessao()" class="btn btn-close"></button>
+                        <h4 class="m-0 text-dark fw-bold">Gerenciar Variáveis da IA</h4>
+                        <div class="d-flex gap-2">
+                            <button onclick="abrirLixeira()" class="btn btn-outline-danger fw-bold px-4">Lixeira</button>
+                            <button onclick="novaSessao()" class="btn btn-light border text-dark fw-bold px-4">Fechar</button>
                         </div>
                     </div>
                     
                     <div class="bg-light p-4 rounded border mb-5" id="areaFormNovaOpcao">
-                        <h6 class="text-success fw-bold mb-3" id="tituloFormOpcao">➕ Adicionar Nova Opção</h6>
+                        <h6 class="text-brand-blue fw-bold mb-3" id="tituloFormOpcao">Adicionar Nova Variável</h6>
                         <div class="row g-3 align-items-end">
                             <div class="col-md-3">
                                 <label class="form-label small">Categoria</label>
-                                <select id="novoTipo" class="form-select border-success">
+                                <select id="novoTipo" class="form-select border-primary">
                                     <option value="mercados">Mercado</option>
                                     <option value="narradores">Narrador</option>
                                     <option value="formatos">Formato</option>
@@ -325,54 +392,56 @@
                                 </select>
                             </div>
                             <div class="col-md-9">
-                                <label class="form-label small">Título da Opção (O que aparece forte)</label>
-                                <input type="text" id="novoTitulo" class="form-control border-success" placeholder="Ex: Novo Gancho Visual">
+                                <label class="form-label small">Título Público</label>
+                                <input type="text" id="novoTitulo" class="form-control border-primary" placeholder="Nome que aparecerá na lista">
                             </div>
-                            <div class="col-md-10">
-                                <label class="form-label small">Explicação Estratégica (Contexto para a IA)</label>
-                                <textarea id="novaExplicacao" class="form-control border-success" rows="2" placeholder="Explique o que essa opção faz..."></textarea>
+                            <div class="col-md-9">
+                                <label class="form-label small">Contexto Estratégico (Oculto - Apenas para a IA)</label>
+                                <textarea id="novaExplicacao" class="form-control border-primary" rows="2" placeholder="O que o Claude deve saber sobre isso?"></textarea>
                             </div>
-                            <div class="col-md-2">
-                                <button type="button" id="btnInserirOpcao" onclick="adicionarNovoItem()" class="btn btn-success w-100 fw-bold h-100">Inserir</button>
+                            <div class="col-md-3">
+                                <button type="button" id="btnInserirOpcao" onclick="adicionarNovoItem()" class="btn btn-primary w-100 fw-bold h-100 text-nowrap">Inserir</button>
                             </div>
                         </div>
                     </div>
 
-                    <h6 class="fw-bold mb-3 text-secondary">Opções Cadastradas (Banco de Dados)</h6>
+                    <h6 class="fw-bold mb-4 text-dark border-bottom pb-2">Banco de Dados Ativo</h6>
                     
                     <div class="row g-4">
-                        <div class="col-12"><label class="form-label text-muted m-0">Temas Extras</label><div id="listaTemas"></div></div>
-                        <div class="col-12"><label class="form-label text-muted m-0">Ganchos Extras</label><div id="listaGanchos"></div></div>
-                        <div class="col-md-4"><label class="form-label text-muted m-0">Mercados Extras</label><div id="listaMercados"></div></div>
-                        <div class="col-md-4"><label class="form-label text-muted m-0">Narradores Extras</label><div id="listaNarradores"></div></div>
-                        <div class="col-md-4"><label class="form-label text-muted m-0">Formatos Extras</label><div id="listaFormatos"></div></div>
+                        <div class="col-12"><label class="form-label text-muted m-0">Temas Adicionais</label><div id="listaTemas"></div></div>
+                        <div class="col-12"><label class="form-label text-muted m-0">Ganchos Adicionais</label><div id="listaGanchos"></div></div>
+                        <div class="col-lg-4 col-md-6"><label class="form-label text-muted m-0">Mercados</label><div id="listaMercados"></div></div>
+                        <div class="col-lg-4 col-md-6"><label class="form-label text-muted m-0">Narradores</label><div id="listaNarradores"></div></div>
+                        <div class="col-lg-4 col-md-12"><label class="form-label text-muted m-0">Formatos</label><div id="listaFormatos"></div></div>
                     </div>
                 </div>
 
                 <div id="painelLixeira" class="card p-5 d-none">
                     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                        <h4 class="m-0 text-danger fw-bold">🗑️ Lixeira (Limpeza em 10 dias)</h4>
-                        <button onclick="abrirConfiguracoes()" class="btn btn-outline-secondary">⬅️ Voltar</button>
+                        <h4 class="m-0 text-danger fw-bold">Lixeira do Sistema</h4>
+                        <button onclick="abrirConfiguracoes()" class="btn btn-light border text-dark fw-bold px-4">Voltar</button>
                     </div>
+                    <p class="text-muted mb-4">Itens excluídos permanecem aqui por 10 dias antes da limpeza automática do servidor.</p>
                     <div id="listaLixeira" class="list-group"></div>
                 </div>
 
-                <div id="loading" class="text-center d-none my-5 py-4">
-                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
-                    <h5 class="mt-3 fw-bold">Claude está trabalhando nisso...</h5>
+                <div id="loading" class="text-center d-none my-5 py-5">
+                    <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+                    <h5 class="fw-bold text-dark">Processando Estratégia...</h5>
+                    <p class="text-muted small">O Claude está cruzando as informações com o manual da marca.</p>
                 </div>
 
                 <div id="resultadoContainer" class="card p-4 p-md-5 d-none shadow-sm">
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 border-bottom pb-3 gap-3">
-                        <h4 class="m-0 text-primary fw-bold" id="resultadoTitulo">✅ Briefing Finalizado</h4>
+                        <h4 class="m-0 text-primary fw-bold" id="resultadoTitulo">Briefing Finalizado</h4>
                         <div class="d-flex gap-2">
-                            <button onclick="copiarTexto()" class="btn btn-outline-primary fw-bold">📋 Copiar</button>
-                            <button onclick="exportarPDF()" class="btn btn-danger fw-bold">📄 Salvar PDF</button>
+                            <button onclick="copiarTexto()" class="btn btn-light border text-dark fw-bold">Copiar Texto</button>
+                            <button onclick="exportarPDF()" class="btn btn-primary fw-bold">Salvar em PDF</button>
                         </div>
                     </div>
-                    <div id="resultado" class="p-3 p-md-4 bg-light rounded text-dark markdown-body"></div>
-                    <div class="text-center mt-4">
-                        <button onclick="novaSessao()" class="btn btn-link text-muted text-decoration-none">← Nova geração</button>
+                    <div id="resultado" class="p-4 bg-light rounded text-dark markdown-body border"></div>
+                    <div class="text-center mt-5">
+                        <button onclick="novaSessao()" class="btn btn-light border text-dark fw-bold px-5 py-3 rounded-pill">Novo Roteiro</button>
                     </div>
                 </div>
 
@@ -381,49 +450,123 @@
     </div>
 
     <script>
-        let anexoData = null;
+        let anexosData = [];
         let configGlobal = { mercados: [], narradores: [], formatos: [], temas: [], ganchos: [] };
         let expandedCategories = { mercados: false, narradores: false, formatos: false, temas: false, ganchos: false };
         let todosRoteirosCache = [];
-        let edicaoAtual = null; // Variável para controlar a edição
+        let edicaoAtual = null; 
+
+        const sidebar = document.getElementById('sidebar');
+        const resizer = document.getElementById('sidebarResizer');
+        let isResizing = false;
+        let lastSidebarWidth = 340;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            resizer.classList.add('active');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            if (sidebar.classList.contains('collapsed')) return;
+            
+            let newWidth = e.clientX;
+            if (newWidth < 220) newWidth = 220;
+            if (newWidth > 600) newWidth = 600;
+            
+            sidebar.style.width = newWidth + 'px';
+            lastSidebarWidth = newWidth;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = 'default';
+                document.body.style.userSelect = 'auto';
+                resizer.classList.remove('active');
+            }
+        });
 
         document.addEventListener("DOMContentLoaded", () => {
             carregarConfiguracoes();
             carregarHistorico();
             
-            document.getElementById('anexoInput').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
+            document.getElementById('anexoInput').addEventListener('change', async function(e) {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
                 
-                if(file.size > 10 * 1024 * 1024) {
-                    Swal.fire('Aviso', 'O arquivo é muito grande (máx 10MB recomendado).', 'warning');
+                let warningShown = false;
+
+                for (let file of files) {
+                    if (file.size > 10 * 1024 * 1024 && !warningShown) {
+                        Swal.fire('Aviso', 'Um ou mais arquivos excedem 10MB. Isso pode causar lentidão na resposta.', 'warning');
+                        warningShown = true;
+                    }
+
+                    const base64 = await lerArquivoBase64(file);
+                    anexosData.push({ nome: file.name, tipo: file.type, base64: base64 });
                 }
 
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    anexoData = { nome: file.name, tipo: file.type, base64: event.target.result };
-                    const preview = document.getElementById('anexoPreview');
-                    preview.innerHTML = `📎 <strong>Anexo adicionado:</strong> ${file.name} <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-3" onclick="removerAnexo()">Remover</button>`;
-                    preview.classList.remove('d-none');
-                };
-                reader.readAsDataURL(file);
+                renderAnexosPreview();
+                this.value = ''; 
             });
         });
 
-        function removerAnexo() {
-            anexoData = null;
-            document.getElementById('anexoInput').value = '';
-            document.getElementById('anexoPreview').classList.add('d-none');
+        function lerArquivoBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = event => resolve(event.target.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
         }
 
-        function toggleMenu() {
+        function renderAnexosPreview() {
+            const preview = document.getElementById('anexoPreview');
+            preview.innerHTML = '';
+            
+            if (anexosData.length === 0) {
+                preview.classList.add('d-none');
+                return;
+            }
+
+            preview.classList.remove('d-none');
+            
+            anexosData.forEach((anexo, index) => {
+                const div = document.createElement('div');
+                div.className = 'p-3 bg-white border rounded d-flex justify-content-between align-items-center shadow-sm';
+                div.innerHTML = `
+                    <div class="text-truncate" style="max-width: 80%;">
+                        <strong class="text-brand-blue">📄 Anexo:</strong> 
+                        <span class="text-dark">${anexo.nome}</span>
+                    </div> 
+                    <button type="button" class="btn btn-sm btn-light border text-danger fw-bold py-1 px-3" onclick="removerAnexo(${index})">Remover</button>
+                `;
+                preview.appendChild(div);
+            });
+        }
+
+        function removerAnexo(index) {
+            anexosData.splice(index, 1);
+            renderAnexosPreview();
+        }
+
+        function toggleMenuMobile() {
             document.getElementById('sidebar').classList.toggle('active');
             document.getElementById('overlay').classList.toggle('active');
         }
 
-        // ==========================================
-        // LÓGICA DE CONFIGURAÇÕES, LISTAS E EDIÇÃO
-        // ==========================================
+        function toggleSidebarCollapse() {
+            sidebar.classList.toggle('collapsed');
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.style.width = '80px';
+            } else {
+                sidebar.style.width = lastSidebarWidth + 'px';
+            }
+        }
+
         async function carregarConfiguracoes() {
             try {
                 const res = await fetch('/api/configuracoes');
@@ -451,12 +594,12 @@
             let html = '';
 
             if(array.length === 0) {
-                container.innerHTML = '<div class="p-3 mt-2 text-muted small text-center bg-white border rounded">Nenhum item da base de dados</div>';
+                container.innerHTML = '<div class="p-3 mt-2 text-muted small text-center bg-light border rounded">Nenhum registro encontrado.</div>';
                 return;
             }
 
             if (isExpanded) {
-                html += `<div class="mb-2 mt-2"><input type="text" class="form-control form-control-sm border-primary" placeholder="Pesquisar em ${categoria}..." onkeyup="filtrarListaDOM(this, 'items-${categoria}')"></div>`;
+                html += `<div class="mb-2 mt-2"><input type="text" class="form-control form-control-sm" placeholder="Buscar em ${categoria}..." onkeyup="filtrarListaDOM(this, 'items-${categoria}')"></div>`;
             }
 
             html += `<div class="${isExpanded ? 'rounded border p-1 bg-light mt-2' : 'mt-2'}" style="${isExpanded ? 'max-height: 250px; overflow-y: auto;' : ''}">`;
@@ -464,18 +607,19 @@
             array.forEach((item, index) => {
                 const partes = item.split(' — ');
                 const titulo = partes[0];
-                const explicacao = partes[1] ? `<span class="d-block text-muted" style="font-size: 0.75rem;">${partes[1]}</span>` : '';
+                const explicacao = partes[1] ? `<span class="d-block text-muted mt-1" style="font-size: 0.8rem;">${partes[1]}</span>` : '';
                 const hideClass = (!isExpanded && index >= limit) ? 'd-none' : '';
                 
+                // Resolvido: Mudança no Flexbox para garantir que os botões não espremam o texto
                 html += `
-                    <div class="p-2 bg-white d-flex justify-content-between align-items-center mb-1 rounded border items-${categoria} ${hideClass}" data-search="${item.toLowerCase()}">
-                        <div class="me-2 text-truncate" style="max-width: 70%;">
-                            <strong class="text-brand-blue" style="font-size: 0.85rem;">${titulo}</strong>
+                    <div class="p-3 bg-white mb-2 rounded border items-${categoria} ${hideClass}" data-search="${item.toLowerCase()}">
+                        <div class="text-truncate w-100 mb-2">
+                            <strong class="text-brand-blue" style="font-size: 0.95rem;">${titulo}</strong>
                             ${explicacao}
                         </div>
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-warning py-0 px-2 fw-bold" style="font-size: 0.75rem;" onclick="prepararEdicao('${categoria}', ${index})" title="Editar Opção">✏️</button>
-                            <button class="btn btn-sm btn-danger py-0 px-2 fw-bold" style="font-size: 0.75rem;" onclick="removerItemPersonalizado('${categoria}', ${index})" title="Excluir Opção">x</button>
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button class="btn btn-sm btn-light border py-1 px-3 fw-bold text-dark text-nowrap" onclick="prepararEdicao('${categoria}', ${index})" title="Editar">Editar</button>
+                            <button class="btn btn-sm btn-danger py-1 px-3 fw-bold text-nowrap" onclick="removerItemPersonalizado('${categoria}', ${index})" title="Excluir">Excluir</button>
                         </div>
                     </div>
                 `;
@@ -484,15 +628,14 @@
 
             if (array.length > limit) {
                 if (!isExpanded) {
-                    html += `<button class="btn btn-sm btn-link text-decoration-none w-100 text-muted p-0 mt-1" onclick="toggleExpandir('${categoria}', true)">🔽 Ver mais (${array.length - limit})</button>`;
+                    html += `<button class="btn btn-sm btn-light border w-100 text-dark fw-bold mt-2" onclick="toggleExpandir('${categoria}', true)">Exibir todos (${array.length})</button>`;
                 } else {
-                    html += `<button class="btn btn-sm btn-link text-decoration-none w-100 text-muted p-0 mt-2" onclick="toggleExpandir('${categoria}', false)">🔼 Ver menos</button>`;
+                    html += `<button class="btn btn-sm btn-light border w-100 text-dark fw-bold mt-2" onclick="toggleExpandir('${categoria}', false)">Ocultar lista</button>`;
                 }
             }
             container.innerHTML = html;
         }
 
-        // Função de Preparar Edição
         function prepararEdicao(categoria, index) {
             const item = configGlobal[categoria][index];
             const partes = item.split(' — ');
@@ -503,14 +646,10 @@
             
             edicaoAtual = { categoria, index };
             
-            // Alterar o visual do formulário
-            document.getElementById('tituloFormOpcao').innerHTML = '✏️ Editar Opção Selecionada';
-            document.getElementById('tituloFormOpcao').classList.replace('text-success', 'text-warning');
+            document.getElementById('tituloFormOpcao').innerHTML = 'Editar Variável';
             const btnInserir = document.getElementById('btnInserirOpcao');
             btnInserir.textContent = 'Atualizar';
-            btnInserir.classList.replace('btn-success', 'btn-warning');
             
-            // Rolagem suave para os campos de inserção
             document.getElementById('areaFormNovaOpcao').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -524,9 +663,9 @@
             const items = document.querySelectorAll(`.${itemClass}`);
             items.forEach(el => {
                 if (el.getAttribute('data-search').includes(termo)) {
-                    el.classList.remove('d-none'); el.classList.add('d-flex');
+                    el.classList.remove('d-none'); el.classList.add('d-block');
                 } else {
-                    el.classList.remove('d-flex'); el.classList.add('d-none');
+                    el.classList.remove('d-block'); el.classList.add('d-none');
                 }
             });
         }
@@ -537,14 +676,15 @@
             
             if(!optgroup) {
                 optgroup = document.createElement('optgroup');
-                optgroup.label = "Novas Opções (Banco de Dados)";
-                optgroup.className = "novas-opcoes text-success";
+                optgroup.label = "Banco de Dados";
+                optgroup.className = "novas-opcoes text-brand-blue";
                 select.appendChild(optgroup);
             }
             optgroup.innerHTML = '';
             array.forEach(item => {
                 const opt = document.createElement('option');
-                opt.value = item; opt.textContent = item;
+                opt.value = item; 
+                opt.textContent = item.split(' — ')[0]; // Agora só exibe o Título
                 optgroup.appendChild(opt);
             });
         }
@@ -562,29 +702,21 @@
             const itemFinal = explicacao ? `${titulo} — ${explicacao}` : titulo;
             
             if (edicaoAtual) {
-                // Se a categoria foi mudada durante a edição, remove da velha e adiciona na nova
                 if(edicaoAtual.categoria !== categoria) {
                     configGlobal[edicaoAtual.categoria].splice(edicaoAtual.index, 1);
                     configGlobal[categoria].push(itemFinal);
                 } else {
-                    // Sobrescreve na mesma posição para não bagunçar a lista
                     configGlobal[categoria][edicaoAtual.index] = itemFinal;
                 }
                 
-                edicaoAtual = null; // Reseta a edição
+                edicaoAtual = null; 
+                document.getElementById('tituloFormOpcao').innerHTML = 'Adicionar Nova Variável';
+                document.getElementById('btnInserirOpcao').textContent = 'Inserir';
                 
-                // Restaura o visual do botão
-                document.getElementById('tituloFormOpcao').innerHTML = '➕ Adicionar Nova Opção';
-                document.getElementById('tituloFormOpcao').classList.replace('text-warning', 'text-success');
-                const btnInserir = document.getElementById('btnInserirOpcao');
-                btnInserir.textContent = 'Inserir';
-                btnInserir.classList.replace('btn-warning', 'btn-success');
-                
-                salvarConfiguracoes(true, 'Opção Atualizada!');
+                salvarConfiguracoes(true, 'Registro Atualizado');
             } else {
-                // Novo item normal
                 configGlobal[categoria].push(itemFinal);
-                salvarConfiguracoes(true, 'Opção Adicionada!');
+                salvarConfiguracoes(true, 'Registro Adicionado');
             }
             
             document.getElementById('novoTitulo').value = '';
@@ -601,10 +733,10 @@
 
             configGlobal[categoria].splice(index, 1);
             await salvarConfiguracoes(false);
-            Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Movido para Lixeira', showConfirmButton: false, timer: 2000 });
+            Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Enviado para a lixeira', showConfirmButton: false, timer: 2000 });
         }
 
-        async function salvarConfiguracoes(mostrarAviso = false, mensagem = 'Opção Adicionada!') {
+        async function salvarConfiguracoes(mostrarAviso = false, mensagem = 'Concluído') {
             try {
                 await fetch('/api/configuracoes', {
                     method: 'POST',
@@ -621,7 +753,7 @@
             document.getElementById('painelLixeira').classList.add('d-none');
             document.getElementById('resultadoContainer').classList.add('d-none');
             document.getElementById('painelConfiguracoes').classList.remove('d-none');
-            if(window.innerWidth <= 768) toggleMenu();
+            if(window.innerWidth <= 768) toggleMenuMobile();
         }
 
         async function abrirLixeira() {
@@ -637,7 +769,7 @@
             container.innerHTML = '';
             
             if(itens.length === 0) {
-                container.innerHTML = '<div class="p-4 text-center text-muted border rounded">A lixeira está vazia.</div>';
+                container.innerHTML = '<div class="p-5 text-center text-muted border rounded bg-light">Sua lixeira está vazia.</div>';
                 return;
             }
 
@@ -647,15 +779,15 @@
                 const diasRestantes = 10 - diasPassados;
 
                 container.innerHTML += `
-                    <div class="list-group-item d-flex justify-content-between align-items-center bg-white mb-2 border rounded p-3">
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-white mb-3 border rounded p-4">
                         <div>
-                            <span class="badge bg-secondary mb-1">${item.categoria.toUpperCase()}</span>
-                            <strong class="d-block text-dark">${item.valor.split(' — ')[0]}</strong>
-                            <small class="text-danger fw-bold">Expira em aprox. ${diasRestantes} dias</small>
+                            <span class="badge bg-dark mb-2 px-2 py-1">${item.categoria.toUpperCase()}</span>
+                            <strong class="d-block text-dark fs-6">${item.valor.split(' — ')[0]}</strong>
+                            <span class="text-danger fw-bold d-block mt-1" style="font-size: 0.8rem;">Auto-limpeza em ${diasRestantes} dias</span>
                         </div>
                         <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-success fw-bold" onclick="restaurarItemLixeira('${item._id}')">♻️ Restaurar</button>
-                            <button class="btn btn-sm btn-danger fw-bold" onclick="excluirPermanente('${item._id}')">❌ Apagar</button>
+                            <button class="btn btn-sm btn-light border fw-bold text-dark px-3 py-2" onclick="restaurarItemLixeira('${item._id}')">Restaurar</button>
+                            <button class="btn btn-sm btn-danger fw-bold px-3 py-2" onclick="excluirPermanente('${item._id}')">Apagar</button>
                         </div>
                     </div>
                 `;
@@ -664,7 +796,7 @@
 
         async function restaurarItemLixeira(id) {
             await fetch(`/api/lixeira/restaurar/${id}`, { method: 'POST' });
-            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Restaurado!', showConfirmButton: false, timer: 1500 });
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Restaurado com sucesso', showConfirmButton: false, timer: 1500 });
             await carregarConfiguracoes(); 
             await carregarLixeira();
         }
@@ -674,9 +806,6 @@
             await carregarLixeira();
         }
 
-        // ==========================================
-        // LÓGICA DO GERADOR DE ROTEIROS E HISTÓRICO
-        // ==========================================
         function gerarAleatorio() {
             const selects = ['narrador', 'formato', 'tema', 'gancho'];
             selects.forEach(id => {
@@ -687,14 +816,29 @@
             if (!document.getElementById('painelRevisao').classList.contains('d-none')) revisarPedido();
         }
 
+        function getSelectedText(id) {
+            const sel = document.getElementById(id);
+            if(sel.selectedIndex === -1) return '';
+            return sel.options[sel.selectedIndex].text;
+        }
+
         function revisarPedido() {
+            let anexosHtml = '';
+            if (anexosData.length > 0) {
+                anexosHtml = '<div class="mt-4 pt-3 border-top"><strong class="text-brand-blue d-block mb-2">Documentos Anexados:</strong>';
+                anexosData.forEach(a => {
+                    anexosHtml += `<div class="text-dark small mb-1">• ${a.nome}</div>`;
+                });
+                anexosHtml += '</div>';
+            }
+
             const resumo = `
-                <div class="mb-2"><strong>🌍 Mercado:</strong> ${document.getElementById('mercado').value}</div>
-                <div class="mb-2"><strong>👤 Narrador:</strong> ${document.getElementById('narrador').value}</div>
-                <div class="mb-2"><strong>🎬 Formato:</strong> ${document.getElementById('formato').value}</div>
-                <div class="mb-2"><strong>📌 Tema:</strong> ${document.getElementById('tema').value}</div>
-                <div class="mb-2"><strong>🪝 Gancho:</strong> ${document.getElementById('gancho').value}</div>
-                ${anexoData ? `<div class="mb-2 text-success"><strong>📎 Anexo Incluído:</strong> ${anexoData.nome}</div>` : ''}
+                <div class="mb-3"><strong class="text-muted text-uppercase small">Mercado</strong><br><span class="text-dark fw-600">${getSelectedText('mercado')}</span></div>
+                <div class="mb-3"><strong class="text-muted text-uppercase small">Narrador</strong><br><span class="text-dark fw-600">${getSelectedText('narrador')}</span></div>
+                <div class="mb-3"><strong class="text-muted text-uppercase small">Formato</strong><br><span class="text-dark fw-600">${getSelectedText('formato')}</span></div>
+                <div class="mb-3"><strong class="text-muted text-uppercase small">Tema Principal</strong><br><span class="text-brand-blue fw-bold">${getSelectedText('tema')}</span></div>
+                <div class="mb-3"><strong class="text-muted text-uppercase small">Gancho</strong><br><span class="text-dark fw-600">${getSelectedText('gancho')}</span></div>
+                ${anexosHtml}
             `;
             document.getElementById('resumoCombinacao').innerHTML = resumo;
             document.getElementById('painelCriacao').classList.add('d-none');
@@ -714,7 +858,7 @@
                 tema: document.getElementById('tema').value,
                 gancho: document.getElementById('gancho').value,
                 notas: document.getElementById('notas').value,
-                anexo: anexoData 
+                anexos: anexosData 
             };
 
             document.getElementById('painelRevisao').classList.add('d-none');
@@ -734,7 +878,7 @@
                 document.getElementById('filtroDataHistorico').value = '';
                 carregarHistorico();
             } catch (error) {
-                Swal.fire('Erro!', 'Falha ao comunicar com a API.', 'error');
+                Swal.fire('Erro', 'Ocorreu um erro de comunicação com o servidor.', 'error');
                 novaSessao();
             } finally {
                 document.getElementById('loading').classList.add('d-none');
@@ -765,21 +909,21 @@
             lista.innerHTML = '';
 
             if (roteirosFiltrados.length === 0) {
-                lista.innerHTML = '<div class="p-4 text-center text-muted small">Nenhum roteiro encontrado.</div>';
+                lista.innerHTML = '<div class="p-4 text-center text-muted small">Nenhum registro encontrado.</div>';
                 return;
             }
 
             roteirosFiltrados.forEach(rot => {
                 const div = document.createElement('div');
-                div.className = 'historico-item';
+                div.className = 'historico-item bg-white border shadow-sm';
                 div.onclick = () => {
                     exibirRoteiroSalvo(rot);
-                    if(window.innerWidth <= 768) toggleMenu();
+                    if(window.innerWidth <= 768) toggleMenuMobile();
                 };
                 const tituloCurto = rot.tema.split(' — ')[0];
                 div.innerHTML = `
-                    <div class="historico-titulo fw-bold text-truncate">${tituloCurto}</div>
-                    <div class="historico-data">${new Date(rot.dataCriacao).toLocaleString('pt-BR')} • ${rot.mercado}</div>
+                    <div class="historico-titulo text-truncate" title="${tituloCurto}">${tituloCurto}</div>
+                    <div class="historico-data hide-on-collapse">${new Date(rot.dataCriacao).toLocaleString('pt-BR')} • ${rot.mercado.split(' — ')[0]}</div>
                 `;
                 lista.appendChild(div);
             });
@@ -792,7 +936,7 @@
             document.getElementById('painelLixeira').classList.add('d-none');
             document.getElementById('resultadoContainer').classList.remove('d-none');
             document.getElementById('resultado').innerHTML = marked.parse(rot.conteudo);
-            document.getElementById('resultadoTitulo').innerText = "🕒 Roteiro Salvo";
+            document.getElementById('resultadoTitulo').innerText = "Roteiro Salvo";
         }
 
         function novaSessao() {
@@ -802,15 +946,18 @@
             document.getElementById('painelLixeira').classList.add('d-none');
             document.getElementById('painelCriacao').classList.remove('d-none');
             document.getElementById('formRoteiro').reset();
-            removerAnexo();
-            edicaoAtual = null; // Limpa edição
-            document.getElementById('resultadoTitulo').innerText = "✅ Briefing Finalizado";
-            if(window.innerWidth <= 768 && document.getElementById('sidebar').classList.contains('active')) toggleMenu();
+            
+            anexosData = [];
+            renderAnexosPreview();
+            
+            edicaoAtual = null; 
+            document.getElementById('resultadoTitulo').innerText = "Briefing Finalizado";
+            if(window.innerWidth <= 768 && document.getElementById('sidebar').classList.contains('active')) toggleMenuMobile();
         }
 
         function copiarTexto() {
             navigator.clipboard.writeText(document.getElementById('resultado').innerText).then(() => {
-                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Copiado!', showConfirmButton: false, timer: 1500 });
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Copiado para área de transferência', showConfirmButton: false, timer: 1500 });
             });
         }
 

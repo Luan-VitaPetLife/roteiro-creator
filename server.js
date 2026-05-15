@@ -11,27 +11,26 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ==========================================
-// 1. CONEXÃO MONGODB OTIMIZADA PARA SERVERLESS (VERCEL)
+// 1. CONEXÃO MONGODB OTIMIZADA PARA SERVERLESS
 // ==========================================
 let isConnected = false;
 
 const connectDB = async () => {
-  if (isConnected) return; // Usa a conexão em cache se o servidor já estiver acordado
-  
+  if (isConnected) return;
   try {
     const db = await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000 // Evita que a Vercel trave infinitamente
+      serverSelectionTimeoutMS: 5000
     });
     isConnected = db.connections[0].readyState === 1;
-    console.log("✅ MongoDB Conectado (Modo Serverless)");
+    console.log("✅ MongoDB Conectado");
   } catch (err) {
-    console.error("❌ Erro de conexão MongoDB:", err);
-    throw new Error("Falha ao conectar com o banco de dados");
+    console.error("❌ Erro MongoDB:", err);
+    throw new Error("Falha ao conectar com o banco");
   }
 };
 
 // ==========================================
-// MODELOS DO BANCO DE DADOS
+// MODELOS DO BANCO
 // ==========================================
 const RoteiroSchema = new mongoose.Schema({
   mercado: String, tema: String, conteudo: String, dataCriacao: { type: Date, default: Date.now }
@@ -392,12 +391,12 @@ Quando aprovado, monte o briefing completo. Responda DIRETAMENTE com o Roteiro e
 `;
 
 // ==========================================
-// ROTAS DE GERAÇÃO E HISTÓRICO
+// ROTAS DA APLICAÇÃO
 // ==========================================
 app.post('/api/gerar', async (req, res) => {
   try {
-    await connectDB(); // Garante conexão ativa antes de operar
-    const { mercado, narrador, formato, tema, gancho, notas, anexo } = req.body;
+    await connectDB();
+    const { mercado, narrador, formato, tema, gancho, notas, anexos } = req.body;
 
     const contentArray = [
       { 
@@ -406,18 +405,21 @@ app.post('/api/gerar', async (req, res) => {
       }
     ];
 
-    if (anexo && anexo.base64) {
-      const base64Data = anexo.base64.split(',')[1];
-      const mimeType = anexo.tipo.toLowerCase();
+    // Lógica para Múltiplos Anexos
+    if (anexos && Array.isArray(anexos)) {
+      anexos.forEach(anexo => {
+        const base64Data = anexo.base64.split(',')[1];
+        const mimeType = anexo.tipo.toLowerCase();
 
-      if (mimeType.startsWith('image/')) {
-        contentArray.push({ type: "image", source: { type: "base64", media_type: mimeType, data: base64Data } });
-      } else if (mimeType === 'application/pdf') {
-        contentArray.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: base64Data } });
-      } else {
-        const textContent = Buffer.from(base64Data, 'base64').toString('utf-8');
-        contentArray[0].text += `\n\n--- DOCUMENTO DE REFERÊNCIA ANEXADO (${anexo.nome}) ---\n${textContent}`;
-      }
+        if (mimeType.startsWith('image/')) {
+          contentArray.push({ type: "image", source: { type: "base64", media_type: mimeType, data: base64Data } });
+        } else if (mimeType === 'application/pdf') {
+          contentArray.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: base64Data } });
+        } else {
+          const textContent = Buffer.from(base64Data, 'base64').toString('utf-8');
+          contentArray[0].text += `\n\n--- DOCUMENTO ANEXADO (${anexo.nome}) ---\n${textContent}`;
+        }
+      });
     }
 
     const response = await anthropic.messages.create({
@@ -429,9 +431,7 @@ app.post('/api/gerar', async (req, res) => {
     await novoRoteiro.save();
 
     res.json({ roteiro: textoRoteiro });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 app.get('/api/historico', async (req, res) => {
@@ -441,9 +441,6 @@ app.get('/api/historico', async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// ==========================================
-// ROTAS DE CONFIGURAÇÕES (CRUD)
-// ==========================================
 app.get('/api/configuracoes', async (req, res) => {
   try {
     await connectDB();
@@ -465,9 +462,6 @@ app.post('/api/configuracoes', async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// ==========================================
-// ROTAS DA LIXEIRA (SOFT DELETE)
-// ==========================================
 app.post('/api/lixeira', async (req, res) => {
   try {
     await connectDB();
@@ -507,10 +501,7 @@ app.delete('/api/lixeira/:id', async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// Front-end principal
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-
-// Exportação compatível com Serverless na Vercel
 module.exports = app;
 
 if (process.env.NODE_ENV !== 'production') {
